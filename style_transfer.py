@@ -1,6 +1,11 @@
 import torch
+from typing import cast
+
+import numpy as np
+import torchvision.transforms as transforms
 from PIL import Image
-from diffusers import StableDiffusionImg2ImgPipeline
+from diffusers.pipelines.stable_diffusion.pipeline_output import StableDiffusionPipelineOutput
+from diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion_img2img import StableDiffusionImg2ImgPipeline
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -47,6 +52,30 @@ def run_style_transfer(
         strength        = strength,
         guidance_scale  = guidance,
         num_inference_steps = steps,
-    ).images[0]
+    )
 
-    return result
+    if isinstance(result, StableDiffusionPipelineOutput):
+        images = result.images
+    elif isinstance(result, tuple):
+        images = result[0]
+    else:
+        images = result
+
+    if isinstance(images, list):
+        output_image = images[0]
+    else:
+        output_image = images
+
+    if isinstance(output_image, Image.Image):
+        return output_image
+
+    if isinstance(output_image, torch.Tensor):
+        tensor = output_image.detach().cpu().clamp(0, 1)
+        if tensor.ndim == 4:
+            tensor = tensor[0]
+        return transforms.ToPILImage()(tensor)
+
+    if isinstance(output_image, np.ndarray):
+        return Image.fromarray(output_image)
+
+    raise TypeError(f"Unsupported output type: {type(output_image)}")

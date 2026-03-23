@@ -48,9 +48,9 @@ if st.button("✨ Generate Artwork", use_container_width=True):
 
         col_a, col_b = st.columns(2)
         with col_a:
-            st.image(content_img, caption="Original", use_column_width=True)
+            st.image(content_img, caption="Original", use_container_width=True)
         with col_b:
-            st.image(output, caption=f"✨ {style_name}", use_column_width=True)
+            st.image(output, caption=f"✨ {style_name}", use_container_width=True)
 
         buf = io.BytesIO()
         output.save(buf, format="PNG")
